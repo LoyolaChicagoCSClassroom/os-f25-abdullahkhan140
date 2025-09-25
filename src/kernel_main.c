@@ -11,9 +11,6 @@ const unsigned int multiboot_header[] = {
 
      0, 0, 8
 };
-    
-};
-
 // Read a byte from a port
 uint8_t inb(uint16_t port) {
     uint8_t value;
@@ -39,7 +36,7 @@ void putc(int c) {
         vram[cursor_pos++] = (color << 8) | c;
     }
 
-    // Simple scrolling when we reach bottom of screen (25 lines * 80 cols)
+    // scrolling when we reach bottom of screen (25 lines * 80 cols)
     if (cursor_pos >= 80 * 25) {
         // Scroll up by one line
         for (int i = 0; i < 80 * 24; i++) {
@@ -53,14 +50,12 @@ void putc(int c) {
     }
 }
 
-// Very simple print string function
 void print(const char *str) {
     while (*str) {
         putc(*str++);
     }
 }
 
-// Very basic print decimal number (no negative numbers)
 void print_dec(int num) {
     if (num == 0) {
         putc('0');
@@ -74,14 +69,11 @@ void print_dec(int num) {
         buffer[i++] = '0' + (num % 10);
         num /= 10;
     }
-
-    // Print digits in reverse order
+    
     for (int j = i - 1; j >= 0; j--) {
         putc(buffer[j]);
     }
 }
-
-// A very simple printf-like function supporting %d and %s only
 void simple_printf(const char *format, ...) {
     __builtin_va_list args;
     __builtin_va_start(args, format);
@@ -107,7 +99,7 @@ void simple_printf(const char *format, ...) {
     __builtin_va_end(args);
 }
 
-void main() {
+void main void() {
     simple_printf("Neil OS Terminal Driver Test\n");
     simple_printf("Printing lines with scrolling...\n");
 
