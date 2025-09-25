@@ -1,6 +1,6 @@
 /* The bootloader will look at this image and start execution at the symbol
    designated as the entry point. */
-ENTRY(main)
+ENTRY(kernel_main)
 OUTPUT_FORMAT(elf32-i386)
 
 /* Tell where the various sections of the object files will be put in the final
@@ -8,7 +8,7 @@ OUTPUT_FORMAT(elf32-i386)
 SECTIONS
 {
     /* link the multiboot struct here */
-    . = 0;
+    . = 0x100000;
     .multiboot : { *(.multiboot) }
     /* Begin putting sections at 1 MiB, a conventional place for kernels to be
        loaded at by the bootloader. */
