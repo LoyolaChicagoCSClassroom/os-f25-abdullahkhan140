@@ -1,11 +1,9 @@
 #include "rprintf.h"
 #include <stdarg.h>
-#include <stddef.h>
 #include <stdint.h>
 
 #define VGA_ADDRESS 0xB8000
 #define VGA_WIDTH 80
-#define VGA_HEIGHT 25
 
 static uint16_t *vga_buffer = (uint16_t*)VGA_ADDRESS;
 static size_t cursor_pos = 0;
