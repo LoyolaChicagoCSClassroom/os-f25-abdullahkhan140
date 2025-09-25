@@ -1,11 +1,23 @@
+OUTPUT_FORMAT("elf32-i386")
 ENTRY(kernel_main)
 
-SECTIONS
-{
-    .multiboot 0x100000 : { KEEP(*(.multiboot)) }
+SECTIONS {
+    . = 0x00100000;
 
-    .text 0x100010 : { *(.text) }
+    .text : {
+        *(.text)
+    }
 
-    .data : { *(.data) }
-    .bss  : { *(.bss) *(COMMON) }
+    .rodata : {
+        *(.rodata)
+    }
+
+    .data : {
+        *(.data)
+    }
+
+    .bss : {
+        *(.bss)
+        *(COMMON)
+    }
 }
