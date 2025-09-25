@@ -1,6 +1,9 @@
 #include "rprintf.h"
 
 void kernel_main(void) {
-    rprintf("Hello from kernel!\n");
-    rprintf("Number: %d  Hex: %x  String: %s  Char: %c\n", 1234, 0xBEEF, "test", 'A');
+    rprintf("Hello, bare-metal world!\n");
+    rprintf("Decimal: %d\n", 1234);
+    rprintf("Hex: %x\n", 0xABCD);
+    rprintf("String: %s\n", "sample");
+    rprintf("Char: %c\n", 'X');
 }
