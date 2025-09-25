@@ -1,6 +1,8 @@
 #include "rprintf.h"
-#include <stdarg.h>
 #include <stdint.h>
+#include <stddef.h>
+#include <stdarg.h>
+
 
 #define VGA_ADDRESS 0xB8000
 #define VGA_WIDTH 80
