@@ -1,51 +1,51 @@
-# Directories
+# =========================================================
+# Bare-metal i386 OS Makefile
+# =========================================================
+
+CC := gcc
+LD := ld
+SIZE := size
+OBJCOPY := objcopy
+
+CFLAGS := -ffreestanding -fno-exceptions -fno-asynchronous-unwind-tables \
+          -m32 -march=i386 -fno-pie -fno-stack-protector -g3 -Wall -Isrc
+
 ODIR := obj
 SDIR := src
+ISO_DIR := iso
 
-# Files
 OBJS := kernel_main.o rprintf.o
 OBJ := $(patsubst %,$(ODIR)/%,$(OBJS))
 
-# Tools
-CC := gcc
-LD := ld
-GRUB_MKRESCUE := grub-mkrescue
-SIZE := size
+KERNEL := kernel
+ISO := kernel.iso
 
-# Flags
-CFLAGS := -ffreestanding -m32 -g -Wall -Isrc
+all: $(KERNEL)
 
-# Targets
-all: kernel.iso
+$(KERNEL): $(ODIR) $(OBJ) kernel.ld
+	$(LD) -m elf_i386 $(OBJ) -T kernel.ld -o $(KERNEL)
+	$(SIZE) $(KERNEL)
 
-# Build object files
-$(ODIR)/%.o: $(SDIR)/%.c | $(ODIR)
+$(ODIR)/%.o: $(SDIR)/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-# Create obj dir
 $(ODIR):
 	mkdir -p $(ODIR)
 
-# Link kernel
-kernel.bin: $(OBJ)
-	$(LD) -m elf_i386 -T kernel.ld -o kernel.bin $(OBJ)
-	$(SIZE) kernel.bin
+clean:
+	rm -rf $(ODIR) $(KERNEL) $(ISO) $(ISO_DIR)
 
-# Make ISO with GRUB
-kernel.iso: kernel.bin
-	mkdir -p iso/boot/grub
-	cp kernel.bin iso/boot/kernel.bin
-	cat > iso/boot/grub/grub.cfg <<EOF
-set timeout=0
+iso: $(KERNEL)
+	mkdir -p $(ISO_DIR)/boot/grub
+	cp $(KERNEL) $(ISO_DIR)/boot/
+	echo 'set timeout=0
 set default=0
 
 menuentry "My Kernel" {
-    multiboot /boot/kernel.bin
+    multiboot /boot/$(KERNEL)
     boot
-}
-EOF
-	grub-mkrescue -o kernel.iso iso
+}' > $(ISO_DIR)/boot/grub/grub.cfg
+	grub-mkrescue -o $(ISO) $(ISO_DIR)
 
-# Clean
-clean:
-	rm -rf $(ODIR) kernel.bin iso
+run: iso
+	qemu-system-i386 -cdrom $(ISO) -m 32M
