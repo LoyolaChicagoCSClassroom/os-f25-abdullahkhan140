@@ -1,10 +1,10 @@
-OUTPUT_FORMAT("elf32-i386")
 ENTRY(kernel_main)
-
-SECTIONS {
-    . = 0x00100000;
+SECTIONS
+{
+    . = 0x100000;
 
     .text : {
+        *(.multiboot)
         *(.text)
     }
 
@@ -12,12 +12,7 @@ SECTIONS {
         *(.rodata)
     }
 
-    .data : {
-        *(.data)
-    }
-
     .bss : {
         *(.bss)
-        *(COMMON)
     }
 }
