@@ -1,5 +1,6 @@
 #include "rprintf.h"
 #include <stdarg.h>
+#include <stdint.h>
 
 #define VGA_ADDRESS 0xB8000
 #define VGA_COLS 80
@@ -9,16 +10,28 @@ static unsigned short *vga_buffer = (unsigned short *)VGA_ADDRESS;
 static int row = 0, col = 0;
 static unsigned char color = 0x0F; // white on black
 
-// --- minimal libc-like helpers ---
+// Multiboot header
+#define MULTIBOOT_HEADER_MAGIC 0x1BADB002
+#define MULTIBOOT_HEADER_FLAGS 0x00000003
+#define MULTIBOOT_CHECKSUM -(MULTIBOOT_HEADER_MAGIC + MULTIBOOT_HEADER_FLAGS)
+
+__attribute__((section(".multiboot")))
+const uint32_t multiboot_header[] = {
+    MULTIBOOT_HEADER_MAGIC,
+    MULTIBOOT_HEADER_FLAGS,
+    MULTIBOOT_CHECKSUM
+};
+
+// Helper: strlen
 static int strlen(const char *s) {
     int len = 0;
     while (*s++) len++;
     return len;
 }
 
+// Helper: integer to string
 static char *itoa(int value, char *str, int base) {
-    char *p = str;
-    char *p1, *p2;
+    char *p = str, *p1, *p2;
     unsigned int n = (value < 0 && base == 10) ? -value : (unsigned int)value;
 
     do {
@@ -27,13 +40,9 @@ static char *itoa(int value, char *str, int base) {
         n /= base;
     } while (n);
 
-    if (value < 0 && base == 10) {
-        *p++ = '-';
-    }
-
+    if (value < 0 && base == 10) *p++ = '-';
     *p = '\0';
 
-    // reverse string
     for (p1 = str, p2 = p - 1; p1 < p2; p1++, p2--) {
         char tmp = *p1;
         *p1 = *p2;
@@ -42,7 +51,7 @@ static char *itoa(int value, char *str, int base) {
     return str;
 }
 
-// --- VGA output ---
+// Output a single character
 static void putc(char c) {
     if (c == '\n') {
         row++;
@@ -56,50 +65,33 @@ static void putc(char c) {
             row++;
         }
     }
-
-    if (row >= VGA_ROWS) {
-        row = 0; // simple wraparound
-    }
+    if (row >= VGA_ROWS) row = 0;
 }
 
+// Output a string
 static void puts(const char *s) {
-    while (*s) {
-        putc(*s++);
-    }
+    while (*s) putc(*s++);
 }
 
-// --- rprintf ---
+// rprintf implementation (supports %d, %x, %c, %s)
 void rprintf(const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
+    char buf[32];
 
     for (const char *p = fmt; *p; p++) {
         if (*p == '%') {
             p++;
-            if (*p == 's') {
-                char *str = va_arg(args, char*);
-                puts(str);
-            } else if (*p == 'd') {
-                int val = va_arg(args, int);
-                char buf[32];
-                itoa(val, buf, 10);
-                puts(buf);
-            } else if (*p == 'x') {
-                int val = va_arg(args, int);
-                char buf[32];
-                itoa(val, buf, 16);
-                puts(buf);
-            } else if (*p == 'c') {
-                char c = (char)va_arg(args, int);
-                putc(c);
-            } else {
-                putc('%');
-                putc(*p);
+            switch (*p) {
+                case 'd': itoa(va_arg(args, int), buf, 10); puts(buf); break;
+                case 'x': itoa(va_arg(args, int), buf, 16); puts(buf); break;
+                case 'c': putc((char)va_arg(args, int)); break;
+                case 's': puts(va_arg(args, char*)); break;
+                default: putc(*p); break;
             }
         } else {
             putc(*p);
         }
     }
-
     va_end(args);
 }
