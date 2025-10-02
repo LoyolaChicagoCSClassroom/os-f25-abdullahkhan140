@@ -8,6 +8,8 @@
 /*---------------------------------------------------*/
 
 #include "rprintf.h"
+#include "terminal.h"
+
 /*---------------------------------------------------*/
 /* The purpose of this routine is to output data the */
 /* same as the standard printf function without the  */
