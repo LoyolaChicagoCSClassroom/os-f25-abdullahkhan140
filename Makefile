@@ -40,9 +40,16 @@ obj:
 
 # Build bootable root filesystem image
 rootfs.img:
+	# Create a 32 MB empty disk image
 	dd if=/dev/zero of=rootfs.img bs=1M count=32
+
+	# Format as plain FAT16 (no offset)
 	mkfs.vfat rootfs.img
+
+	# Create /boot directory in the image
 	mmd -i rootfs.img ::/boot
+
+	# Copy kernel and grub.cfg into the image
 	mcopy -i rootfs.img kernel ::/
 	mcopy -i rootfs.img grub.cfg ::/boot
 
@@ -71,9 +78,10 @@ $(ISO): kernel grub.cfg
 run_iso: $(ISO)
 	qemu-system-i386 -cdrom $(ISO) -serial stdio
 
-# Run kernel in QEMU
-run:
+# Run kernel in QEMU (depends on rootfs.img)
+run: rootfs.img
 	qemu-system-i386 -drive file=rootfs.img,format=raw -m 512 -serial stdio
+
 debug:
 	./launch_qemu.sh
 
