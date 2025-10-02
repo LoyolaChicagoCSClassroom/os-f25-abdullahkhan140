@@ -39,15 +39,10 @@ obj:
 	mkdir -p obj
 
 # Build bootable root filesystem image
-dd if=/dev/zero of=rootfs.img bs=1M count=32
-
-	# Format as plain FAT16 (no offset)
+rootfs.img:
+	dd if=/dev/zero of=rootfs.img bs=1M count=32
 	mkfs.vfat rootfs.img
-
-	# Create /boot directory in the image
 	mmd -i rootfs.img ::/boot
-
-	# Copy kernel and grub.cfg into the image
 	mcopy -i rootfs.img kernel ::/
 	mcopy -i rootfs.img grub.cfg ::/boot
 
