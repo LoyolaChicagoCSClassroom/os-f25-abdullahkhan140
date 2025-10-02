@@ -1,5 +1,6 @@
 #ifndef __RPRINTF_H__
 #define __RPRINTF_H__
+#include "terminal.h"
 
 
 //#include <ctype.h>
