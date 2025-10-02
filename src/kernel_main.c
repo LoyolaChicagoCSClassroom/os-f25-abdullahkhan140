@@ -14,7 +14,7 @@ void putc(int c) {
         // write char with (0x07)
         vga_buffer[cursor_pos++] = (0x07 << 8) | (uint8_t)c; 
     }
-    // wrap around if we hit the end of screen 
+    // move to next ine if we are at end of screen
     if (cursor_pos >= VGA_WIDTH * VGA_HEIGHT) {
         cursor_pos = 0; 
     }
