@@ -39,15 +39,18 @@ obj:
 	mkdir -p obj
 
 # Build bootable root filesystem image
-rootfs.img:
-	dd if=/dev/zero of=rootfs.img bs=1M count=32
-	grub-mkimage -p "(hd0,msdos1)/boot" -o grub.img -O i386-pc normal biosdisk multiboot multiboot2 configfile fat part_msdos
-	dd if=$(BOOTIMG) of=rootfs.img conv=notrunc
-	echo 'start=2048, type=83, bootable' | sfdisk rootfs.img
-	mkfs.vfat --offset 2048 -F16 rootfs.img
-	mcopy -i rootfs.img@@1M kernel ::/
-	mmd -i rootfs.img@@1M boot
-	mcopy -i rootfs.img@@1M grub.cfg ::/boot
+dd if=/dev/zero of=rootfs.img bs=1M count=32
+
+	# Format as plain FAT16 (no offset)
+	mkfs.vfat rootfs.img
+
+	# Create /boot directory in the image
+	mmd -i rootfs.img ::/boot
+
+	# Copy kernel and grub.cfg into the image
+	mcopy -i rootfs.img kernel ::/
+	mcopy -i rootfs.img grub.cfg ::/boot
+
 	@echo " -- BUILD COMPLETED SUCCESSFULLY --"
 
 # Build ISO (optional, in case sfdisk/mtools not available)
@@ -75,8 +78,7 @@ run_iso: $(ISO)
 
 # Run kernel in QEMU
 run:
-	qemu-system-i386 -hda rootfs.img -serial stdio
-
+	qemu-system-i386 -drive file=rootfs.img,format=raw -m 512 -serial stdio
 debug:
 	./launch_qemu.sh
 
