@@ -1,4 +1,6 @@
 #include <stdint.h>
+#include "interrupt.h"
+
 #define VGA_WIDTH 80
 #define VGA_HEIGHT 25
 #define VGA_ADDRESS 0xB8000
@@ -8,39 +10,42 @@ static uint16_t cursor_pos = 0; // keeps track of where we're printing
 
 void putc(int c) {
     if (c == '\n') {
-        // move to start of next line
         cursor_pos = (cursor_pos / VGA_WIDTH + 1) * VGA_WIDTH;
     } else {
-        // write char with (0x07)
-        vga_buffer[cursor_pos++] = (0x07 << 8) | (uint8_t)c; 
+        vga_buffer[cursor_pos++] = (0x07 << 8) | (uint8_t)c;
     }
-    // move to next ine if we are at end of screen
     if (cursor_pos >= VGA_WIDTH * VGA_HEIGHT) {
-        cursor_pos = 0; 
+        cursor_pos = 0; // wrap around
     }
 }
 
 void printf(const char *str) {
-    // just loop through and print each character
     while (*str) {
         putc(*str++);
     }
 }
 
+extern unsigned char keyboard_map[128];
+extern void putc(int c);
+
 void kernel_main() {
-    printf("Hello, ESP printf!\n");
-    
-    // raw pointer to video memory
-    char *vidmem = (char *)0xB8000; 
-    int offset = 0;
-    
-    // print alphabet on first 2 rows
-    for (int row = 0; row < 2; row++) {         
-        for (int col = 0; col < 26; col++) {    
-            vidmem[offset] = 'A' + col;         // char byte
-            vidmem[offset + 1] = 0x07;          // color byte
-            offset += 2;                        // skip to next char
-        }
-        offset = (row + 1) * 160;               // jump to next row (160 bytes = 80 chars * 2 bytes each)
+    // Initialize interrupts
+    remap_pic();
+    load_gdt();
+    init_idt();
+
+    // Unmask keyboard IRQ1
+    IRQ_clear_mask(1);
+
+    // Print startup messages
+    printf("Keyboard Driver Initialized\n");
+    printf("Start typing...\n\n");
+
+    // Enable interrupts
+    asm("sti");
+
+    // Main loop: halt CPU until next interrupt
+    while (1) {
+        asm("hlt");
     }
 }
