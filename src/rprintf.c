@@ -16,7 +16,6 @@ esp_printf((func_ptr)putc, "Hello World %d\n", 123);
 /*---------------------------------------------------*/
 
 #include "rprintf.h"
-//#include "terminal.h"
 
 /*---------------------------------------------------*/
 /* The purpose of this routine is to output data the */
