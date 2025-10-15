@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include "interrupt.h"
+#include "rprintf.h"   // include our adapted printf
 
 #define VGA_WIDTH 80
 #define VGA_HEIGHT 25
@@ -8,6 +9,7 @@
 static uint16_t *vga_buffer = (uint16_t *)VGA_ADDRESS;
 static uint16_t cursor_pos = 0; // keeps track of where we're printing
 
+// Basic VGA output
 void putc(int c) {
     if (c == '\n') {
         cursor_pos = (cursor_pos / VGA_WIDTH + 1) * VGA_WIDTH;
@@ -19,15 +21,15 @@ void putc(int c) {
     }
 }
 
+// Simple string print
 void printf(const char *str) {
-    while (*str) {
-        putc(*str++);
-    }
+    while (*str) putc(*str++);
 }
 
+// Keyboard map (from elsewhere)
 extern unsigned char keyboard_map[128];
-extern void putc(int c);
 
+// Kernel entry point
 void kernel_main() {
     // Initialize interrupts
     remap_pic();
@@ -37,12 +39,15 @@ void kernel_main() {
     // Unmask keyboard IRQ1
     IRQ_clear_mask(1);
 
-    // Print startup messages
-    printf("Keyboard Driver Initialized\n");
-    printf("Start typing...\n\n");
-
     // Enable interrupts
     asm("sti");
+
+    // Print startup messages
+    esp_printf((func_ptr)putc, "Keyboard Driver Initialized\n");
+    esp_printf((func_ptr)putc, "Start typing...\n\n");
+
+    // Demonstrate esp_printf with numbers
+    esp_printf((func_ptr)putc, "Hello OS! Number: %d Hex: 0x%x\n", 123, 0x7B);
 
     // Main loop: halt CPU until next interrupt
     while (1) {
