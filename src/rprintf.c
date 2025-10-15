@@ -1,3 +1,11 @@
+#include <stdarg.h>
+extern void putc(int c);   // Use your kernel_main.c function
+
+typedef void (*func_ptr)(char);
+typedef char* charptr;
+esp_printf((func_ptr)putc, "Hello World %d\n", 123);
+
+
 /*---------------------------------------------------*/
 /* Public Domain version of printf                   */
 /*                                                   */
@@ -8,7 +16,7 @@
 /*---------------------------------------------------*/
 
 #include "rprintf.h"
-#include "terminal.h"
+//#include "terminal.h"
 
 /*---------------------------------------------------*/
 /* The purpose of this routine is to output data the */
