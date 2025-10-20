@@ -1,52 +1,50 @@
-
 #include <stdint.h>
 #include "rprintf.h"
 
-#define MB2_MAGIC       0xE85250D6
-#define VGA_ADDRESS     0xB8000
-#define SCREEN_ROWS     25
-#define SCREEN_COLS     80
+#define MULTIBOOT2_MAGIC  0xE85250D6
+#define VGA_BASE          0xB8000
+#define VGA_ROWS          25
+#define VGA_COLS          80
+#define VGA_ATTR          0x07   // light gray on black
 
-// current position on screen
-static int screen_pos = 0;
+static int cursor = 0;
 
-// Write one character to VGA text buffer
-void vga_write(int ch) {
-    volatile char *vram = (char *)VGA_ADDRESS;
+// Write a character directly to VGA text buffer
+static void vga_putc(int ch) {
+    volatile char *vga = (volatile char *)VGA_BASE;
 
     if (ch == '\n') {
-        // jump to next line
-        screen_pos += SCREEN_COLS - (screen_pos % SCREEN_COLS);
+        // Move cursor to next line start
+        cursor += VGA_COLS - (cursor % VGA_COLS);
     } else {
-        vram[screen_pos * 2] = (char)ch;   // character byte
-        vram[screen_pos * 2 + 1] = 0x07;   // attribute byte (gray on black)
-        screen_pos++;
+        vga[cursor * 2]     = (char)ch;  // character
+        vga[cursor * 2 + 1] = VGA_ATTR;  // color attribute
+        cursor++;
     }
 
-    // wrap around when reaching end of screen (temporary before scroll)
-    if (screen_pos >= SCREEN_ROWS * SCREEN_COLS) {
-        screen_pos = 0;
+    // Wrap around (temporary until scroll implemented)
+    if (cursor >= VGA_ROWS * VGA_COLS) {
+        cursor = 0;
     }
 }
 
-// read a byte from I/O port
-uint8_t port_read(uint16_t port) {
-    uint8_t result;
-    __asm__ __volatile__("inb %1, %0" : "=a"(result) : "dN"(port));
-    return result;
+// Read one byte from an I/O port
+static inline uint8_t io_read(uint16_t port) {
+    uint8_t value;
+    __asm__ __volatile__("inb %1, %0" : "=a"(value) : "dN"(port));
+    return value;
 }
 
-// entry point for the kernel
+// Kernel entry point
 void kernel_main(void) {
-    // print test message
-    esp_printf(vga_write, "Hello from my OS!\r\n");
+    esp_printf(vga_putc, "Hello from my simple OS!\n");
 
-    // simple polling loop for keyboard input
+    // Basic keyboard polling loop
     for (;;) {
-        uint8_t state = port_read(0x64);
-        if (state & 1) {
-            uint8_t sc = port_read(0x60);
-            // TODO: convert scancode to ASCII and print using vga_write()
+        uint8_t status = io_read(0x64);
+        if (status & 1) {
+            uint8_t scancode = io_read(0x60);
+            // TODO: translate scancode -> ASCII and print
         }
     }
 }
