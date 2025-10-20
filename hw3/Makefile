@@ -3,29 +3,30 @@ CC = gcc
 CFLAGS = -ffreestanding -O0 -g -Wall -Wextra -c
 LDFLAGS = -ffreestanding -O0 -g -Wall -Wextra
 
-# Output binary
+# Output kernel binary
 TARGET = kernel.bin
 
-# Object files
-OBJS = kernel_main.o page.o
+# Source files
+SRCS = kernel_main.c page.c
+OBJS = $(SRCS:.c=.o)
 
-# Default target
+# Default target: build the kernel
 all: $(TARGET)
 
-# Link the kernel
+# Link the kernel binary
 $(TARGET): $(OBJS)
 	$(CC) $(LDFLAGS) -o $@ $(OBJS)
 
-# Compile kernel_main.c
-kernel_main.o: kernel_main.c page.h
-	$(CC) $(CFLAGS) kernel_main.c -o kernel_main.o
+# Compile C source files
+%.o: %.c
+	$(CC) $(CFLAGS) $< -o $@
 
-# Compile page.c
-page.o: page.c page.h
-	$(CC) $(CFLAGS) page.c -o page.o
-
-# Clean build files
+# Clean build artifacts
 clean:
 	rm -f $(OBJS) $(TARGET)
 
-.PHONY: all clean
+# Optional: run in QEMU (if you have it installed)
+run: $(TARGET)
+	qemu-system-x86_64 -kernel $(TARGET) -serial stdio -m 512M
+
+.PHONY: all clean run
