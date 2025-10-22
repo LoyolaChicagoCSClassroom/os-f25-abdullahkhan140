@@ -11,7 +11,6 @@ const unsigned int multiboot_header[] = {
 #include <stdint.h>
 #include "rprintf.h"
 
-#define MULTIBOOT2_MAGIC  0xE85250D6
 #define VGA_BASE          0xB8000
 #define VGA_ROWS          25
 #define VGA_COLS          80
