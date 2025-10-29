@@ -16,30 +16,25 @@ OBJDUMP := $(PREFIX)objdump
 OBJCOPY := $(PREFIX)objcopy
 SIZE := $(PREFIX)size
 CONFIGS := -DCONFIG_HEAP_SIZE=4096
-CFLAGS := -ffreestanding -mgeneral-regs-only -mno-mmx -m32 -march=i386 -fno-pie -fno-stack-protector -g3 -Wall 
+CFLAGS := -ffreestanding -mno-mmx -m32 -march=i386 -fno-pie -fno-stack-protector -g3 -Wall
 
 ODIR = obj
 SDIR = src
 
-OBJS = \
-	kernel_main.o \
-	rprintf.o \
-	terminal.o
-
-# Make sure to keep a blank line here after OBJS list
+OBJS = boot.o kernel_main.o rprintf.o terminal.o interrupt.o keyboard.o page.o paging.o
 
 OBJ = $(patsubst %,$(ODIR)/%,$(OBJS))
 
 $(ODIR)/%.o: $(SDIR)/%.c
-	$(CC) $(CFLAGS) -c -g -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 $(ODIR)/%.o: $(SDIR)/%.s
-	$(CC) $(CFLAGS) -c -g -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 all: bin rootfs.img
 
 bin: obj $(OBJ)
-	$(LD) -melf_i386  obj/* -Tkernel.ld -o kernel
+	$(LD) -melf_i386 obj/* -Tkernel.ld -o kernel
 	$(SIZE) kernel
 
 obj:
@@ -53,7 +48,7 @@ rootfs.img: kernel
 	echo 'start=2048, type=83, bootable' | sfdisk rootfs.img
 	mkfs.vfat --offset 2048 -F16 rootfs.img
 	mcopy -i rootfs.img@@1M kernel ::/
-	mmd -i rootfs.img@@1M boot 
+	mmd -i rootfs.img@@1M boot
 	mcopy -i rootfs.img@@1M grub.cfg ::/boot
 	@echo " -- BUILD COMPLETED SUCCESSFULLY --"
 
