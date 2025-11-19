@@ -19,9 +19,9 @@ CONFIGS := -DCONFIG_HEAP_SIZE=4096
 CFLAGS := -ffreestanding -mno-mmx -m32 -march=i386 -fno-pie -fno-stack-protector -g3 -Wall
 
 ODIR = obj
-SDIR = src
+SDIR = .
 
-OBJS = boot.o kernel_main.o rprintf.o terminal.o interrupt.o keyboard.o page.o paging.o
+OBJS = boot.o kernel_main.o rprintf.o terminal.o interrupt.o keyboard.o page.o paging.o sd.o fat.o
 
 OBJ = $(patsubst %,$(ODIR)/%,$(OBJS))
 

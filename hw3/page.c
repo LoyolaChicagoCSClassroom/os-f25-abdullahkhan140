@@ -1,5 +1,5 @@
 #include "page.h"
-
+#include <stddef.h>
 #define NUM_PAGES 128
 #define PAGE_SIZE (2 * 1024 * 1024)  // 2 MB
 
@@ -39,7 +39,7 @@ struct ppage *allocate_physical_pages(unsigned int npages) {
     return allocd_list;
 }
 
-void free_physical_pages(struct ppage *ppage_list) {
+void free_page_list(struct ppage *ppage_list) {
     if (!ppage_list) return;
 
     // Find last page of the list
@@ -56,3 +56,4 @@ void free_physical_pages(struct ppage *ppage_list) {
     free_physical_pages = ppage_list;
     ppage_list->prev = NULL;
 }
+

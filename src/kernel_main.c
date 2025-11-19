@@ -4,6 +4,7 @@
 #include "keyboard.h"
 #include "page.h"
 #include "paging.h"
+#include "fat.h"
 
 // Get current execution level (privilege level)
 static inline unsigned int get_execution_level(void) {
@@ -52,21 +53,9 @@ void main(void) {
     allocated_pages = allocate_physical_pages(5);
     
     if (allocated_pages != 0) {
-        esp_printf(putc, "[HW3] Successfully allocated 5 pages:\r\n");
-        current = allocated_pages;
-        count = 0;
-        while (current != 0 && count < 5) {
-            esp_printf(putc, "  Page %d: Physical Address = 0x%x\r\n", 
-                      count, (unsigned int)current->physical_addr);
-            current = current->next;
-            count++;
-        }
-        esp_printf(putc, "\r\n");
-        
-        // Test: Free the pages back
-        esp_printf(putc, "[HW3] Test: Freeing 5 pages back to free list...\r\n");
+        esp_printf(putc, "[HW3] Successfully allocated 5 pages\r\n");
         free_physical_pages(allocated_pages);
-        esp_printf(putc, "[HW3] Pages successfully freed\r\n\r\n");
+        esp_printf(putc, "[HW3] Pages freed\r\n\r\n");
     } else {
         esp_printf(putc, "[HW3] ERROR: Failed to allocate pages!\r\n\r\n");
     }
@@ -74,9 +63,38 @@ void main(void) {
     // HW4: Initialize paging (virtual memory)
     init_paging();
     
-    // Test that paging works - if we get here, paging is working!
-    esp_printf(putc, "[HW4] Paging test: Writing to screen after paging enabled\r\n");
-    esp_printf(putc, "[HW4] If you can read this, paging is working!\r\n\r\n");
+    esp_printf(putc, "[HW4] Paging test: If you can read this, paging works!\r\n\r\n");
+    
+    // HW5: Test FAT filesystem
+    if (fatInit() == 0) {
+        struct file *test_file;
+        char file_buffer[512];
+        int bytes_read;
+        
+        // Try to open and read a test file
+        esp_printf(putc, "[HW5] Attempting to open TEST.TXT...\r\n");
+        test_file = fatOpen("TEST.TXT");
+        
+        if (test_file != 0) {
+            // Read the file contents
+            bytes_read = fatRead(test_file, file_buffer, 512);
+            
+            if (bytes_read > 0) {
+                // Null-terminate the buffer
+                if (bytes_read < 512) {
+                    file_buffer[bytes_read] = '\0';
+                } else {
+                    file_buffer[511] = '\0';
+                }
+                
+                // Print the file contents
+                esp_printf(putc, "\r\n[HW5] File contents:\r\n");
+                esp_printf(putc, "--- BEGIN FILE ---\r\n");
+                esp_printf(putc, "%s", file_buffer);
+                esp_printf(putc, "\r\n--- END FILE ---\r\n\r\n");
+            }
+        }
+    }
     
     esp_printf(putc, "=================================\r\n");
     esp_printf(putc, "System Ready - Type on keyboard!\r\n");

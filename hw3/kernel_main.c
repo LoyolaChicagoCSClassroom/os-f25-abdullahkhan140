@@ -26,7 +26,8 @@ int main(void) {
     }
 
     printf("Freeing allocated pages...\n");
-    free_physical_pages(alloc);
+    free_page_list(alloc);
+
 
     // Check free list
     printf("Free list after freeing pages:\n");
