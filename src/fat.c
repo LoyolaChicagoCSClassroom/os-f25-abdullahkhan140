@@ -3,10 +3,13 @@
 #include "terminal.h"
 #include "ide.h"
 
+// CRITICAL: The FAT partition starts at sector 2048 (1MB offset)
+#define FAT_PARTITION_OFFSET 2048
+
 // Global variables
 char bootSector[512];
 char fat_table[8 * SECTOR_SIZE];
-char rde_region[16384];  // Space for root directory entries
+char rde_region[4096];  // Space for root directory entries
 struct boot_sector *bs;
 unsigned int root_sector;
 unsigned int data_region_start;
@@ -77,8 +80,8 @@ void extract_filename(struct root_directory_entry *rde, char *fname) {
 int fatInit(void) {
     esp_printf(putc, "[HW5] Initializing FAT filesystem...\r\n");
     
-    // Read boot sector (sector 0)
-    if (ide_readblock(0, bootSector, 1) != 0) {
+    // Read boot sector - ADD PARTITION OFFSET!
+    if (ide_readblock(FAT_PARTITION_OFFSET, bootSector, 1) != 0) {
         esp_printf(putc, "[HW5] ERROR: Failed to read boot sector\r\n");
         return -1;
     }
@@ -105,10 +108,9 @@ int fatInit(void) {
     esp_printf(putc, "  Root directory entries: %d\r\n", bs->num_root_dir_entries);
     esp_printf(putc, "  Sectors per FAT: %d\r\n", bs->num_sectors_per_fat);
     
-    // Calculate root directory sector
+    // Calculate root directory sector (relative to partition start)
     root_sector = bs->num_fat_tables * bs->num_sectors_per_fat + 
-                  bs->num_reserved_sectors + 
-                  bs->num_hidden_sectors;
+                  bs->num_reserved_sectors;
     
     esp_printf(putc, "  Root directory sector: %d\r\n", root_sector);
     
@@ -118,8 +120,8 @@ int fatInit(void) {
     
     esp_printf(putc, "  Data region starts at sector: %d\r\n", data_region_start);
     
-    // Read FAT table
-    int fat_start_sector = bs->num_reserved_sectors + bs->num_hidden_sectors;
+    // Read FAT table - ADD PARTITION OFFSET!
+    int fat_start_sector = FAT_PARTITION_OFFSET + bs->num_reserved_sectors;
     if (ide_readblock(fat_start_sector, fat_table, bs->num_sectors_per_fat) != 0) {
         esp_printf(putc, "[HW5] ERROR: Failed to read FAT table\r\n");
         return -1;
@@ -148,9 +150,9 @@ struct file *fatOpen(const char *filename) {
     
     esp_printf(putc, "[HW5] Opening file: %s\r\n", upper_filename);
     
-    // Read root directory entries
+    // Read root directory entries - ADD PARTITION OFFSET!
     unsigned int rde_sectors = (bs->num_root_dir_entries * 32 + bs->bytes_per_sector - 1) / bs->bytes_per_sector;
-    if (ide_readblock(root_sector, rde_region, rde_sectors) != 0) {
+    if (ide_readblock(FAT_PARTITION_OFFSET + root_sector, rde_region, rde_sectors) != 0) {
         esp_printf(putc, "[HW5] ERROR: Failed to read root directory\r\n");
         return 0;
     }
@@ -215,8 +217,8 @@ int fatRead(struct file *file, char *buffer, unsigned int size) {
     
     esp_printf(putc, "[HW5] Reading %d sectors starting at sector %d\r\n", sectors_to_read, first_sector);
     
-    // Read the data
-    if (ide_readblock(first_sector, buffer, sectors_to_read) != 0) {
+    // Read the data - ADD PARTITION OFFSET!
+    if (ide_readblock(FAT_PARTITION_OFFSET + first_sector, buffer, sectors_to_read) != 0) {
         esp_printf(putc, "[HW5] ERROR: Failed to read file data\r\n");
         return -1;
     }
