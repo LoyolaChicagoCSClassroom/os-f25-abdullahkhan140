@@ -354,11 +354,25 @@ void general_protection_handler(struct interrupt_frame* frame)
     /* do something */
     while(1);
 }
-//void page_fault_handler(struct interrupt_frame* frame)
-void page_fault_handler(struct process_context_with_error* ctx)
+__attribute__((interrupt)) void page_fault_handler(struct interrupt_frame* frame, uint32_t error_code)
 {
+    uint32_t faulting_address;
+    
+    // Read CR2 to get the faulting address
+    __asm__ volatile("mov %%cr2, %0" : "=r"(faulting_address));
+    
+    // Print debug info
+    extern void esp_printf(void (*)(char), const char*, ...);
+    extern void putc(char);
+    
+    esp_printf(putc, "\r\n\r\n[PAGE FAULT!]\r\n");
+    esp_printf(putc, "Faulting address: 0x%x\r\n", faulting_address);
+    esp_printf(putc, "Error code: 0x%x\r\n", error_code);
+    
     asm("cli");
-    while(1);
+    while(1) {
+        asm("hlt");
+    }
 }
 
 

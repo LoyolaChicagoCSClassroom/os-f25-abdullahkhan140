@@ -64,7 +64,14 @@ void main(void) {
     init_paging();
     
     esp_printf(putc, "[HW4] Paging test: If you can read this, paging works!\r\n\r\n");
-    
+    // Print addresses of FAT buffers to see where they are
+extern char bootSector[];
+extern char rde_region[];
+esp_printf(putc, "[DEBUG] bootSector at: 0x%x\r\n", (unsigned int)bootSector);
+esp_printf(putc, "[DEBUG] rde_region at: 0x%x\r\n", (unsigned int)rde_region);
+esp_printf(putc, "[DEBUG] Checking if we can write to rde_region...\r\n");
+rde_region[0] = 0x42;  // Try writing to it
+esp_printf(putc, "[DEBUG] Write successful!\r\n\r\n");
     // HW5: Test FAT filesystem
     if (fatInit() == 0) {
         struct file *test_file;
