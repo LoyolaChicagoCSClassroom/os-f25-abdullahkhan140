@@ -1,5 +1,4 @@
 UNAME_M := $(shell uname -m)
-
 ifeq ($(UNAME_M),aarch64)
 PREFIX:=i386-unknown-elf-
 BOOTIMG:=/usr/local/grub/lib/grub/i386-pc/boot.img
@@ -9,27 +8,26 @@ PREFIX:=
 BOOTIMG:=/usr/lib/grub/i386-pc/boot.img
 GRUBLOC :=
 endif
-
 CC := $(PREFIX)gcc
 LD := $(PREFIX)ld
 OBJDUMP := $(PREFIX)objdump
 OBJCOPY := $(PREFIX)objcopy
 SIZE := $(PREFIX)size
 CONFIGS := -DCONFIG_HEAP_SIZE=4096
-CFLAGS := -ffreestanding -mno-mmx -m32 -march=i386 -fno-pie -fno-stack-protector -g3 -Wall
-
+CFLAGS := -ffreestanding -mno-mmx -mno-sse -mno-sse2 -mno-80387 -mno-fp-ret-in-387 -m32 -march=i386 -fno-pie -fno-stack-protector -g3 -Wall
 ODIR = obj
 SDIR = .
-
-OBJS = boot.o kernel_main.o rprintf.o terminal.o interrupt.o keyboard.o page.o paging.o sd.o fat.o
-
+OBJS = boot.o kernel_main.o rprintf.o terminal.o interrupt.o keyboard.o page.o paging.o ide.o fat.o
 OBJ = $(patsubst %,$(ODIR)/%,$(OBJS))
 
 $(ODIR)/%.o: $(SDIR)/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-$(ODIR)/%.o: $(SDIR)/%.s
+$(ODIR)/boot.o: $(SDIR)/boot.s
 	$(CC) $(CFLAGS) -c -o $@ $<
+
+$(ODIR)/ide.o: $(SDIR)/ide.s
+	nasm -f elf32 -g -o $@ $<
 
 all: bin rootfs.img
 

@@ -77,8 +77,13 @@ struct file {
     struct file *prev;
     struct root_directory_entry rde;
     uint32_t start_cluster;
+    uint32_t current_position;  // ADD THIS LINE
 };
 
+int fatInit(void);
+struct file *fatOpen(const char *filename);
+int fatRead(struct file *file, char *buffer, unsigned int size);
 
 #endif
+
 

@@ -1,7 +1,7 @@
 #include "fat.h"
 #include "rprintf.h"
 #include "terminal.h"
-#include "sd.h"
+#include "ide.h"
 
 // Global variables
 char bootSector[512];
@@ -78,7 +78,7 @@ int fatInit(void) {
     esp_printf(putc, "[HW5] Initializing FAT filesystem...\r\n");
     
     // Read boot sector (sector 0)
-    if (sd_readblock(0, bootSector, 1) != 0) {
+    if (ide_readblock(0, bootSector, 1) != 0) {
         esp_printf(putc, "[HW5] ERROR: Failed to read boot sector\r\n");
         return -1;
     }
@@ -120,7 +120,7 @@ int fatInit(void) {
     
     // Read FAT table
     int fat_start_sector = bs->num_reserved_sectors + bs->num_hidden_sectors;
-    if (sd_readblock(fat_start_sector, fat_table, bs->num_sectors_per_fat) != 0) {
+    if (ide_readblock(fat_start_sector, fat_table, bs->num_sectors_per_fat) != 0) {
         esp_printf(putc, "[HW5] ERROR: Failed to read FAT table\r\n");
         return -1;
     }
@@ -150,7 +150,7 @@ struct file *fatOpen(const char *filename) {
     
     // Read root directory entries
     unsigned int rde_sectors = (bs->num_root_dir_entries * 32 + bs->bytes_per_sector - 1) / bs->bytes_per_sector;
-    if (sd_readblock(root_sector, rde_region, rde_sectors) != 0) {
+    if (ide_readblock(root_sector, rde_region, rde_sectors) != 0) {
         esp_printf(putc, "[HW5] ERROR: Failed to read root directory\r\n");
         return 0;
     }
@@ -216,7 +216,7 @@ int fatRead(struct file *file, char *buffer, unsigned int size) {
     esp_printf(putc, "[HW5] Reading %d sectors starting at sector %d\r\n", sectors_to_read, first_sector);
     
     // Read the data
-    if (sd_readblock(first_sector, buffer, sectors_to_read) != 0) {
+    if (ide_readblock(first_sector, buffer, sectors_to_read) != 0) {
         esp_printf(putc, "[HW5] ERROR: Failed to read file data\r\n");
         return -1;
     }
