@@ -85,7 +85,7 @@ int fatInit(void) {
         esp_printf(putc, "[HW5] ERROR: Failed to read boot sector\r\n");
         return -1;
     }
-    
+   
     bs = (struct boot_sector*)bootSector;
     
     // Validate boot signature

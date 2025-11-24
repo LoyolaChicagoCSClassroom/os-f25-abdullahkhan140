@@ -65,7 +65,7 @@ void main(void) {
     
     esp_printf(putc, "[HW4] Paging test: If you can read this, paging works!\r\n\r\n");
     // Print addresses of FAT buffers to see where they are
-extern char bootSector[];
+    extern char bootSector[];
 extern char rde_region[];
 esp_printf(putc, "[DEBUG] bootSector at: 0x%x\r\n", (unsigned int)bootSector);
 esp_printf(putc, "[DEBUG] rde_region at: 0x%x\r\n", (unsigned int)rde_region);
@@ -103,6 +103,7 @@ esp_printf(putc, "[DEBUG] Write successful!\r\n\r\n");
         }
     }
     
+    
     esp_printf(putc, "=================================\r\n");
     esp_printf(putc, "System Ready - Type on keyboard!\r\n");
     esp_printf(putc, "=================================\r\n\r\n");
@@ -113,3 +114,4 @@ esp_printf(putc, "[DEBUG] Write successful!\r\n\r\n");
         __asm__ volatile("hlt");  // Halt until next interrupt
     }
 }
+
